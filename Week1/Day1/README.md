@@ -4,6 +4,8 @@
 
 **Thời lượng:** 6 giờ học chính + 1 giờ dự phòng/nghỉ, theo lịch Chủ nhật của bạn.
 
+**Kết quả review:** bốn hàm bắt buộc đạt 17/17 tình huống; bốn tình huống bổ sung có trợ lý hỗ trợ đạt 4/4. Bài dự đoán, phân tích lỗi và đáp án ôn tập đã được tổng hợp trong [submission.md](./submission.md). Bonus chưa thực hiện. Thời gian học thực tế và khả năng tự viết lại không nhìn lời giải chưa được xác nhận.
+
 Bạn đã quen function/object/array, nên hôm nay dùng bài dự đoán và một mini module E-commerce để kiểm tra khả năng giải thích, thay vì học lại toàn bộ cú pháp. Đầu ra là code bạn tự viết cùng bằng chứng input không bị thay đổi ngoài ý muốn.
 
 ## 1. Đích đến hôm nay
@@ -195,13 +197,13 @@ node Week1/Day1/check.mjs stock
 node Week1/Day1/check.mjs
 ```
 
-Các hàm ban đầu là TODO và chủ động throw lỗi, nên bộ check chưa thể pass khi bạn chưa làm bài. Mỗi lệnh chỉ kiểm tra yêu cầu của nhóm đã chọn; lệnh cuối chạy bốn nhóm bắt buộc. Bonus chạy riêng:
+Bốn hàm bắt buộc đã hoàn thành và đạt bộ check. Mỗi lệnh chỉ kiểm tra yêu cầu của nhóm đã chọn; lệnh cuối chạy bốn nhóm bắt buộc. Bonus còn TODO và sẽ báo chưa đạt nếu chạy riêng:
 
 ```powershell
 node Week1/Day1/check.mjs category
 ```
 
-Bạn có thể đọc file check để hiểu yêu cầu. Không sửa kỳ vọng chỉ để có kết quả xanh; nếu thấy yêu cầu mâu thuẫn, ghi lại để review. Thêm ít nhất hai kiểm tra của riêng bạn vào [my-checks.mjs](./my-checks.mjs), rồi chạy:
+Bạn có thể đọc file check để hiểu yêu cầu. Không sửa kỳ vọng chỉ để có kết quả xanh; nếu thấy yêu cầu mâu thuẫn, ghi lại để review. [my-checks.mjs](./my-checks.mjs) đã có bốn tình huống do trợ lý bổ sung; bạn vẫn có thể tự thêm ít nhất hai kiểm tra để luyện cách nghĩ tình huống biên. Chạy file bằng:
 
 ```powershell
 node Week1/Day1/my-checks.mjs
@@ -222,11 +224,12 @@ Trả lời không nhìn tài liệu, có ví dụ của riêng bạn:
 **Hoàn thành khi:**
 
 - [ ] Đã ghi dự đoán trước khi chạy đủ 10 câu; giữ lại câu trả lời sai để thấy cách sửa suy nghĩ.
-- [ ] Bốn hàm bắt buộc đạt toàn bộ nhóm check tương ứng.
+- [x] Bốn hàm bắt buộc đạt toàn bộ nhóm check tương ứng.
 - [ ] Có ít nhất hai assertion tự bổ sung, kiểm tra được một tình huống có ý nghĩa.
 - [ ] Giải thích được một lỗi mutation/shallow copy và chứng minh input cũ còn nguyên sau sửa.
 - [ ] Tự trả lời được ít nhất 4/5 câu self-check bằng ví dụ.
-- [ ] Điền submission, ghi thời gian thực tế và phần còn vướng.
+- [x] Tổng hợp submission từ bài trả lời và kết quả chạy; ghi rõ phần trợ lý hỗ trợ và phần còn vướng.
+- [ ] Bổ sung thời gian học thực tế; chưa có dữ liệu để điền số giờ.
 
 Bonus không phải điều kiện sang Ngày 2. Nếu phần bắt buộc mất quá thời lượng, dừng thêm chức năng và ghi phần mắc để được hỗ trợ.
 
@@ -236,4 +239,4 @@ Bonus không phải điều kiện sang Ngày 2. Nếu phần bắt buộc mất
 
 > Review Tuần 1 — Ngày 1. Mình đã hoàn thành bài trong Week1/Day1; hãy kiểm tra code, cách giải thích và chỉ ra phần cần sửa trước Ngày 2.
 
-Bạn tự quyết định khi nào commit; buổi học này chỉ chuẩn bị bài và công cụ, chưa tạo commit hoặc push.
+Người học đã yêu cầu lưu kết quả Ngày 1 bằng commit `hoàn thành ngày 1` và push lên nhánh hiện tại. Kết quả thao tác Git được xác nhận trong phản hồi sau khi thực hiện.
