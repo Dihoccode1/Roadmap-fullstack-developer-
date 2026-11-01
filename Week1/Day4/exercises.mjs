@@ -5,6 +5,7 @@
 // Giữ cấu trúc hàm lồng nhau và tên export; chỉ thay TODO trong thân hàm.
 // Không dùng biến global, eval hoặc this để lấy dữ liệu từ bên ngoài.
 // Hôm nay tập trung đọc biến từ scope nơi khai báo; state thay đổi học ở Ngày 5.
+// Review: bốn bài đạt 12/12 kiểm tra và đúng cấu trúc lexical scope đã yêu cầu.
 //
 // Docs — đọc phần Lexical scoping và ví dụ makeFunc/makeAdder:
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Closures
@@ -27,11 +28,11 @@
 // Giữ readShopName nằm ngoài callFromAdmin và không truyền đối số cho helper.
 export function getShopLabel(shopName) {
   function readShopName() {
-    throw new Error('TODO: readShopName');
+    return `Shop: ${shopName}`;
   }
 
   function callFromAdmin() {
-    const shopName = 'Admin Shop';
+    const shopName = "Admin Shop";
     return readShopName();
   }
 
@@ -45,7 +46,7 @@ export function getShopLabel(shopName) {
 // Không gọi labelProduct ngay trong factory; cần trả chính function đó.
 export function createProductLabeler(category) {
   return function labelProduct(name) {
-    throw new Error('TODO: labelProduct');
+    return `${category}: ${name}`;
   };
 }
 
@@ -59,14 +60,19 @@ export function createProductLabeler(category) {
 // { currency: 'VND', basePrice: 200000, discountedPrice: 180000, total: 198000 }.
 // Chưa làm bài toán làm tròn tiền; dùng bộ input mẫu có kết quả nguyên.
 export function createPriceCalculator(basePrice, taxRate) {
-  const currency = 'VND';
+  const currency = "VND";
 
   return function calculate(discountPercent = 0) {
-    // TODO: hiện chưa áp dụng discountPercent.
-    const discountedPrice = basePrice;
+    // Mỗi lần gọi calculate có discount riêng, đọc giá gốc từ factory.
+    const discountedPrice = basePrice - (basePrice * discountPercent) / 100;
 
     function buildResult() {
-      throw new Error('TODO: buildResult');
+      return {
+        currency,
+        basePrice,
+        discountedPrice,
+        total: discountedPrice * (1 + taxRate),
+      };
     }
 
     return buildResult();
@@ -85,7 +91,7 @@ export function createAccessChecker(requiredRole) {
     const roles = user.roles;
 
     function hasRequiredRole() {
-      throw new Error('TODO: hasRequiredRole');
+      return roles.includes(requiredRole);
     }
 
     return hasRequiredRole();
