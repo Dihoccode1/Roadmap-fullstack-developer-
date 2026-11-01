@@ -135,11 +135,14 @@ const checks = [
 
 const argument = process.argv[2];
 const group = Number(argument);
-if (argument !== undefined && ![1, 2, 3, 4].includes(group)) {
+if (argument === undefined) {
+  console.log('SKIP: Ngày 7 bỏ qua theo yêu cầu người học; không tính là đã hoàn thành.');
+  console.log('Giữ nguyên bài làm dở. Muốn quay lại, chọn nhóm: node Week1/Day7/check.mjs 1');
+} else if (![1, 2, 3, 4].includes(group)) {
   console.error('Chọn bài 1–4. Bỏ số để chạy cả bốn bài.');
   process.exitCode = 1;
 } else {
-  const selected = checks.filter(([id]) => argument === undefined || id === group);
+  const selected = checks.filter(([id]) => id === group);
   let passed = 0;
   for (const [id, title, run] of selected) {
     try {

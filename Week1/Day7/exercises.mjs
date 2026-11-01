@@ -1,4 +1,5 @@
 // TUẦN 1 — NGÀY 7: ÔN TẬP VÀ TÍCH HỢP GIỎ HÀNG / HÓA ĐƠN.
+// BỎ QUA theo yêu cầu người học; giữ nguyên phần code đã làm, không tính hoàn thành.
 // Chủ đề -> docs/video -> làm trực tiếp trong hàm. Tổng kết Markdown cuối buổi.
 // Không yêu cầu constructor/prototype/class của bài 4 Ngày 6 đã được bỏ qua.
 // Không thêm async, database, framework hoặc package.
@@ -15,10 +16,10 @@
 // F8 this: https://www.youtube.com/watch?v=ii1Ra_zLDIo
 //
 // Chạy từng bài: node Week1/Day7/check.mjs 1  (đổi 1–4).
-// Chạy cả ngày: node Week1/Day7/check.mjs
+// Lệnh không có số báo SKIP; chọn rõ nhóm 1–4 nếu muốn quay lại.
 // Bài kiểm tra tổng hợp có 12 tình huống; review cuối buổi đọc thêm cách giữ state.
 
-import { createCart } from '../Day5/exercises.mjs';
+import { createCart } from "../Day5/exercises.mjs";
 
 // BÀI 1 — Gộp các dòng sản phẩm mà không sửa input.
 // lines: [{ productId, quantity }, ...]. productId là string hợp lệ.
@@ -29,7 +30,23 @@ import { createCart } from '../Day5/exercises.mjs';
 // Ví dụ [p1:2, p2:1, p1:3] -> [p1:5, p2:1].
 // Được dùng for/find hoặc reduce; ưu tiên cách tự giải thích được.
 export function mergeCartLines(lines) {
-  throw new Error('TODO: mergeCartLines');
+  if (
+    lines.find(
+      (line) => !Number.isSafeInteger(line.quantity) || line.quantity <= 0,
+    )
+  ) {
+    throw new RangeError("Invalid quantity");
+  }
+  return lines.reduce((acc, line) => {
+    const existingLine = acc.find((l) => l.productId === line.productId);
+    if (existingLine) {
+      existingLine.quantity += line.quantity;
+    } else {
+      acc.push({ productId: line.productId, quantity: line.quantity });
+    }
+    return acc;
+  }, []);
+  throw new Error("TODO: mergeCartLines");
 }
 
 // BÀI 2 — Tổng tiền thuần, không giữ state giữa các lần gọi.
@@ -45,7 +62,33 @@ export function mergeCartLines(lines) {
 // Ví dụ p1 giá 100000 x2 + p2 giá 45000 x1, giảm 10%:
 // { itemCount: 3, subtotal: 245000, discountAmount: 24500, total: 220500 }.
 export function calculateOrderSummary(catalog, lines, discountPercent = 0) {
-  throw new Error('TODO: calculateOrderSummary');
+  const mergedLines = mergeCartLines(lines);
+
+  let itemCount = 0;
+  let subtotal = 0;
+
+  for (const line of mergedLines) {
+    const product = catalog.find((product) => product.id === line.productId);
+
+    if (!product) {
+      throw new RangeError("Product ID not found in catalog");
+    }
+
+    itemCount += line.quantity;
+    subtotal += product.priceMinor * line.quantity;
+  }
+
+  const discountAmount = Math.floor((subtotal * discountPercent) / 100);
+
+  const total = subtotal - discountAmount;
+
+  return {
+    itemCount,
+    subtotal,
+    discountAmount,
+    total,
+  };
+  throw new Error("TODO: calculateOrderSummary");
 }
 
 // BÀI 3 — Ghép cart Ngày 5 với cấu hình discount bằng closure.
@@ -63,7 +106,7 @@ export function createCheckoutSession(catalog) {
   // TODO: state discount ban đầu bằng 0, nằm trong factory.
 
   function getSummary() {
-    throw new Error('TODO: session.getSummary');
+    throw new Error("TODO: session.getSummary");
   }
 
   return {
@@ -71,11 +114,11 @@ export function createCheckoutSession(catalog) {
     remove: cart.remove,
     getItems: cart.getItems,
     setDiscount(percent) {
-      throw new Error('TODO: session.setDiscount');
+      throw new Error("TODO: session.setDiscount");
     },
     getSummary,
     getReceipt() {
-      throw new Error('TODO: session.getReceipt');
+      throw new Error("TODO: session.getReceipt");
     },
   };
 }
@@ -94,10 +137,10 @@ export function createReceiptPrinter(shopName, session) {
     shopName,
     session,
     print() {
-      throw new Error('TODO: printer.print');
+      throw new Error("TODO: printer.print");
     },
     createCallback() {
-      throw new Error('TODO: printer.createCallback');
+      throw new Error("TODO: printer.createCallback");
     },
   };
 }
