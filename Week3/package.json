@@ -1,0 +1,17 @@
+{
+  "name": "fullstack-roadmap-week3",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.12.0"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "typecheck:day1": "tsc --noEmit -p Day1/tsconfig.json",
+    "check:day1": "node Day1/check.mjs"
+  },
+  "devDependencies": {
+    "typescript": "7.0.2"
+  }
+}
