@@ -26,6 +26,7 @@
 //
 // Chạy từng bài: node Week2/Day3/check.mjs 1  (đổi 1–4).
 // Chạy cả ngày: node Week2/Day3/check.mjs
+// Review: đã sửa tên cờ batcher, dọn TODO và sửa cách dùng Promise.resolve ở bài 3.
 
 // BÀI 1 — Tạo lịch chạy thật, không hardcode array kết quả.
 // traceQueues(events=[]) trả Promise<array snapshot> sau callback timer.
@@ -37,7 +38,25 @@
 // Kết quả thông thường: ['sync:start','sync:end','promise','queueMicrotask','timer'].
 // Không dùng await/timer để giả lập marker microtask và không xóa events có sẵn.
 export function traceQueues(events = []) {
-  throw new Error('TODO: traceQueues');
+  events.push("sync:start");
+
+  const result = new Promise((resolve) => {
+    Promise.resolve().then(() => {
+      events.push("promise");
+    });
+
+    queueMicrotask(() => {
+      events.push("queueMicrotask");
+    });
+
+    setTimeout(() => {
+      events.push("timer");
+      resolve([...events]);
+    }, 0);
+  });
+
+  events.push("sync:end");
+  return result;
 }
 
 // BÀI 2 — Đẩy công việc đồng bộ sang Promise microtask.
@@ -49,7 +68,22 @@ export function traceQueues(events = []) {
 // Events cuối: ['sync:start','sync:end','work'].
 // Không chạy work trước rồi mới dùng Promise.resolve để bọc kết quả.
 export function deferWork(work, events = []) {
-  throw new Error('TODO: deferWork');
+  events.push("sync:start");
+  const result = new Promise((resolve, reject) => {
+    Promise.resolve().then(() => {
+      events.push("work");
+      try {
+        const value = work();
+        resolve(value);
+      } catch (err) {
+        reject(err);
+      }
+    });
+  });
+  events.push("sync:end");
+  return result.then((value) => {
+    return value;
+  });
 }
 
 // BÀI 3 — Phần sau await là continuation, không chạy hết đồng bộ.
@@ -59,9 +93,10 @@ export function deferWork(work, events = []) {
 // ['before', 'caller', 'after'].
 // Events mặc định là array riêng, snapshot đã trả không đổi khi events đổi sau đó.
 export async function traceAwait(events = []) {
-  events.push('before');
-  // TODO: thêm điểm await phù hợp.
-  events.push('after');
+  events.push("before");
+  // Promise.resolve(fn) không gọi fn; caller tự thêm marker trong bộ kiểm tra.
+  await Promise.resolve();
+  events.push("after");
   return [...events];
 }
 
@@ -77,10 +112,20 @@ export async function traceAwait(events = []) {
 // Ví dụ add('a'); add('b'); -> sau microtask onBatch(['a','b']) đúng một lần.
 // Dùng queueMicrotask, không thay bằng timer hoặc gọi callback ngay.
 export function createMicrotaskBatcher(onBatch) {
-  // TODO: state hàng chờ và cờ đã lên lịch nằm trong factory.
+  const pendingValues = [];
+  let isScheduled = false;
   return {
     add(value) {
-      throw new Error('TODO: batcher.add');
+      pendingValues.push(value);
+      if (!isScheduled) {
+        isScheduled = true;
+        queueMicrotask(() => {
+          const batch = [...pendingValues];
+          pendingValues.length = 0;
+          isScheduled = false;
+          onBatch(batch);
+        });
+      }
     },
   };
 }
