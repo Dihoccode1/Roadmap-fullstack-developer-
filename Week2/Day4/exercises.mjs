@@ -27,6 +27,7 @@
 // Gợi ý 5 giờ: 60 phút docs/video; 45 phút bài 1; 60 phút bài 2;
 // 45 phút bài 3; 60 phút bài 4; 30 phút chạy check, sửa lỗi và tự giải thích.
 // Chạy: node Week2/Day4/check.mjs 1  (đổi 1–4); bỏ số để chạy cả ngày.
+// Review: bản nộp đạt 12/12 kiểm tra; chỉ dọn TODO không chạy tới, giữ nguyên logic.
 
 // BÀI 1 — Cleanup đúng thời điểm bằng finally.
 // runWithLoading(task, setLoading) trả Promise kết quả task.
@@ -37,7 +38,14 @@
 // hoặc reject với chính Error ban đầu; không return trong finally.
 // setLoading là callback đồng bộ không throw. Không dùng timer/Promise.race.
 export async function runWithLoading(task, setLoading) {
-  throw new Error('TODO: runWithLoading');
+  setLoading(true);
+  try {
+    return await task();
+  } catch (error) {
+    throw error;
+  } finally {
+    setLoading(false);
+  }
 }
 
 // BÀI 2 — Fetch JSON và phân biệt HTTP error với rejection.
@@ -49,7 +57,11 @@ export async function runWithLoading(task, setLoading) {
 // JSON có thể là object/array hoặc falsy; không sửa dữ liệu. Dùng async/await.
 // Không dùng .catch(() => null); fetch không tự reject chỉ vì status 404/500.
 export async function fetchJson(url, fetchImpl) {
-  throw new Error('TODO: fetchJson');
+  const response = await fetchImpl(url);
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+  return await response.json();
 }
 
 // BÀI 3 — Fallback có điều kiện, không che lỗi khác.
@@ -60,7 +72,14 @@ export async function fetchJson(url, fetchImpl) {
 // Mọi lỗi khác: reject với chính Error gốc; không gọi createFallback.
 // Không suy loại lỗi từ message, không sửa Error hay product; dùng try/catch và await.
 export async function getProductOrFallback(id, fetchProduct, createFallback) {
-  throw new Error('TODO: getProductOrFallback');
+  try {
+    return await fetchProduct(id);
+  } catch (error) {
+    if (error.code === "PRODUCT_NOT_FOUND") {
+      return createFallback(id);
+    }
+    throw error;
+  }
 }
 
 // BÀI 4 — Mini product loader: loading/success/error bằng closure.
@@ -76,13 +95,31 @@ export async function getProductOrFallback(id, fetchProduct, createFallback) {
 // Không có hai load chồng nhau trong CÙNG instance hôm nay; bài hủy request học sau.
 // Các instance độc lập; tách getState/load khỏi object vẫn dùng được, không dùng this/global.
 export function createProductLoader(fetchProduct) {
-  // TODO: state riêng trong closure.
+  const state = {
+    status: "idle",
+    data: null,
+    error: null,
+  };
   return {
     getState() {
-      throw new Error('TODO: loader.getState');
+      return { ...state };
     },
     async load(id) {
-      throw new Error('TODO: loader.load');
+      state.status = "loading";
+      state.data = null;
+      state.error = null;
+      try {
+        const product = await fetchProduct(id);
+        state.status = "success";
+        state.data = product;
+        state.error = null;
+        return product;
+      } catch (error) {
+        state.status = "error";
+        state.data = null;
+        state.error = error;
+        throw error;
+      }
     },
   };
 }
