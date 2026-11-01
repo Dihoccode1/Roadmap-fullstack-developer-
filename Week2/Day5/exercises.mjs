@@ -36,7 +36,20 @@
 // Dùng finally clearTimeout với đúng handle do timers.setTimeout trả, ở cả hai nhánh.
 // Không abort, không sửa promise gốc; nó vẫn có thể hoàn thành sau khi wrapper timeout.
 export async function withTimeout(promise, ms, timers = globalThis) {
-  throw new Error('TODO: withTimeout');
+  Promise.race([
+    promise,
+    (newPromise = new Promise((_, reject) => {
+      timers.setTimeout(() => reject(new Error(`Timeout after ${ms}ms`)), ms);
+    })),
+  ]).then(
+    (value) => {
+      return value;
+    },
+    (error) => {
+      throw error;
+    },
+  );
+  throw new Error("TODO: withTimeout");
 }
 
 // BÀI 2 — Truyền signal vào Fetch và giữ lỗi gốc.
@@ -48,7 +61,17 @@ export async function withTimeout(promise, ms, timers = globalThis) {
 // Giữ nguyên lỗi mạng, parse và abort; không đổi thành null/fallback hay tạo controller mới.
 // Không tự thêm abort listener: fetchImpl chịu trách nhiệm dừng I/O và báo lỗi.
 export async function fetchJsonWithSignal(url, signal, fetchImpl) {
-  throw new Error('TODO: fetchJsonWithSignal');
+  // TODO
+  if (signal.aborted) {
+    throw signal.reason;
+  }
+  const response = await fetchImpl(url, { signal });
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+  return await response.json();
+
+  throw new Error("TODO: fetchJsonWithSignal");
 }
 
 // BÀI 3 — Tự xây API chờ có thể hủy.
@@ -60,7 +83,20 @@ export async function fetchJsonWithSignal(url, signal, fetchImpl) {
 // Abort sau khi hoàn thành không làm thay đổi Promise đã fulfill.
 // Dùng new Promise để bọc callback timer/event; không polling hoặc Promise.race ở bài này.
 export function abortableDelay(ms, signal, timers = globalThis) {
-  throw new Error('TODO: abortableDelay');
+  if (signal.aborted) {
+    return Promise.reject(signal.reason);
+  }
+  const promise = new Promise((resolve, reject) => {
+    const timer = timers.setTimeout(() => {
+      resolve();
+    }, ms);
+    signal.addEventListener("abort", () => {
+      timers.clearTimeout(timer);
+      reject(signal.reason);
+    });
+  });
+  return promise;
+  throw new Error("TODO: abortableDelay");
 }
 
 // BÀI 4 — Loader chỉ cho request mới nhất ghi state.
@@ -80,13 +116,15 @@ export function abortableDelay(ms, signal, timers = globalThis) {
 // Gợi ý: phân biệt signal yêu cầu dừng công việc và identity bảo vệ quyền ghi state.
 // Caller chịu trách nhiệm await/catch các load. Không timer/retry/UI hoặc cancel() hôm nay.
 export function createLatestProductLoader(fetchProduct) {
+  const state = { status: "idle", data: null, error: null };
+
   // TODO: state, controller và identity request hiện hành nằm trong closure.
   return {
     getState() {
-      throw new Error('TODO: latestLoader.getState');
+      throw new Error("TODO: latestLoader.getState");
     },
     async load(id) {
-      throw new Error('TODO: latestLoader.load');
+      throw new Error("TODO: latestLoader.load");
     },
   };
 }
