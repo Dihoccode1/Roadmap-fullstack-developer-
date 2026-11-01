@@ -2,6 +2,7 @@
 // Chủ đề -> docs/video -> làm trực tiếp trong hàm. Không cần viết bài vào Markdown.
 // Khi bạn yêu cầu tổng kết cuối buổi, trợ lý mới viết Markdown và commit/push.
 // Hôm nay chỉ có code đồng bộ. Input giả định hợp lệ theo từng bài.
+// Review: bài 1–3 đạt; bài 4 đúng kết quả nhưng cần đổi công thức sang vòng lặp.
 //
 // Docs:
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Execution_model#stack_and_execution_contexts
@@ -27,31 +28,33 @@
 // Không tính lại toàn bộ công thức trong calculateCheckout để né hàm con.
 // Khi debug ở multiply, xem ba frame của bài và biến riêng của mỗi frame.
 export function calculateCheckout(price, quantity, shippingFee, events = []) {
-  events.push('enter calculateCheckout');
+  events.push("enter calculateCheckout");
   const subtotal = calculateSubtotal(price, quantity, events);
   const total = addShipping(subtotal, shippingFee, events);
-  events.push('exit calculateCheckout');
+  events.push("exit calculateCheckout");
+
   return total;
 }
 
 function calculateSubtotal(price, quantity, events) {
-  events.push('enter calculateSubtotal');
+  events.push("enter calculateSubtotal");
   const subtotal = multiply(price, quantity, events);
-  events.push('exit calculateSubtotal');
-  // TODO: hoàn thiện để caller nhận được subtotal.
+  events.push("exit calculateSubtotal");
+  // Trả giá trị về để calculateCheckout tiếp tục tính phí vận chuyển.
+  return subtotal;
 }
 
 function multiply(price, quantity, events) {
-  events.push('enter multiply');
+  events.push("enter multiply");
   const result = price * quantity;
-  events.push('exit multiply');
+  events.push("exit multiply");
   return result;
 }
 
 function addShipping(subtotal, shippingFee, events) {
-  events.push('enter addShipping');
+  events.push("enter addShipping");
   const total = subtotal + shippingFee;
-  events.push('exit addShipping');
+  events.push("exit addShipping");
   return total;
 }
 
@@ -66,7 +69,7 @@ export function sumTo(n) {
     return 0;
   }
 
-  return n + sumTo(n);
+  return n + sumTo(n - 1);
 }
 
 // BÀI 3 — Mỗi lần gọi đệ quy có biến local riêng.
@@ -76,8 +79,12 @@ export function sumTo(n) {
 // Ví dụ root có 2, child A có 3, child B có 4, cháu B1 có 1 -> tổng 10.
 // Điều kiện: đệ quy; biến cộng dồn local; không global, không sửa input.
 export function countCategoryProducts(category) {
-  // TODO: tổng ở node này + kết quả trả về của từng child.
-  throw new Error('TODO: countCategoryProducts');
+  // Mỗi lần gọi giữ biến total local cho node đang xử lý.
+  let total = category.productCount;
+  for (const child of category.children) {
+    total += countCategoryProducts(child);
+  }
+  return total;
 }
 
 // BÀI 4 — Cùng kết quả, tránh tăng số frame theo n.
@@ -87,5 +94,11 @@ export function countCategoryProducts(category) {
 // Mục tiêu: quan sát vòng lặp không tạo thêm frame cho từng lần lặp.
 // Không cần chạy bản đệ quy với n lớn để làm máy tràn stack.
 export function sumToIterative(n) {
-  throw new Error('TODO: sumToIterative');
+  // REVIEW: lời giải hiện tại dùng công thức; cần tự đổi sang for/while theo đề.
+  // Check chỉ kiểm tra kết quả, không chứng minh đã dùng vòng lặp.
+  let total = 0;
+  if (n == 0) {
+    return 0;
+  }
+  return (total = (n * (n + 1)) / 2);
 }
