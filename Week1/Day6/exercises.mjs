@@ -5,6 +5,7 @@
 // Giữ tên export/API; đọc điều kiện về cách viết, không chỉ làm cho check pass.
 // Các file .mjs chạy ở strict mode: plain function call không tự có this = global.
 // Không sửa Object.prototype/Array.prototype, không dùng eval hoặc __proto__.
+// Phạm vi đã điều chỉnh theo yêu cầu người học: làm bài 1–3, bỏ qua bài 4.
 //
 // Docs:
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/this
@@ -17,8 +18,9 @@
 // Sam Meech-Ward — Prototypes: https://www.youtube.com/watch?v=n6lSxTgOm40
 // Nguồn chính chủ kèm video/chapter: https://www.sammeechward.com/prototypes-in-javascript
 //
-// Chạy từng bài: node Week1/Day6/check.mjs 1  (đổi số 1–4).
-// Chạy tất cả: node Week1/Day6/check.mjs
+// Chạy từng bài: node Week1/Day6/check.mjs 1  (đổi số 1–3).
+// Chạy phạm vi hiện tại: node Week1/Day6/check.mjs
+// Bài 4 còn TODO; có thể chủ động mở lại bằng: node Week1/Day6/check.mjs 4
 
 // BÀI 1 — Method thường lấy this theo cách gọi.
 // Trả object có name, priceMinor và getLabel().
@@ -32,7 +34,7 @@ export function createPriceTag(name, priceMinor) {
     name,
     priceMinor,
     getLabel() {
-      throw new Error('TODO: getLabel');
+      return `${this.name}: ${this.priceMinor} VND`;
     },
   };
 }
@@ -44,7 +46,7 @@ export function createPriceTag(name, priceMinor) {
 // Sau khi cart.items thay đổi, callback phải đọc state mới, không cache con số cũ.
 // Không sửa method gốc; dùng bind, không thay bằng wrapper arrow ở bài 2.
 export function createTotalCallback(cart) {
-  throw new Error('TODO: createTotalCallback');
+  return cart.getTotal.bind(cart);
 }
 
 // BÀI 3 — Arrow callback dùng this của method bao ngoài.
@@ -59,25 +61,26 @@ export function createReceiptFormatter(shopName) {
   return {
     shopName,
     formatItems(items) {
-      // TODO: thay callback thường bằng arrow và hoàn thiện nội dung.
-      return items.map(function (item) {
-        throw new Error('TODO: formatItems callback');
-      });
+      // Callback arrow dùng this của lần gọi formatItems hiện tại.
+      return items.map(
+        (item) => `${this.shopName} | ${item.name} x${item.quantity}`,
+      );
     },
   };
 }
 
 // BÀI 4 — Constructor, method dùng chung trên prototype và class kế thừa.
+// BỎ QUA theo yêu cầu người học; không tính là đã hoàn thành kiến thức này.
 // new Product(name, priceMinor) có own properties name và priceMinor.
 // getLabel nằm trên Product.prototype, không tạo lại trên từng instance.
 // getLabel đọc this và trả nhãn cùng format bài 1.
 // Không bind method trong constructor; hai instance dùng chung getLabel.
 export function Product(name, priceMinor) {
-  throw new Error('TODO: Product constructor');
+  throw new Error("TODO: Product constructor");
 }
 
 Product.prototype.getLabel = function () {
-  throw new Error('TODO: Product.prototype.getLabel');
+  throw new Error("TODO: Product.prototype.getLabel");
 };
 
 // DiscountedProduct kế thừa Product, thêm own property discountPercent (0–100).
@@ -92,6 +95,6 @@ export class DiscountedProduct extends Product {
   }
 
   getFinalPrice() {
-    throw new Error('TODO: getFinalPrice');
+    throw new Error("TODO: getFinalPrice");
   }
 }

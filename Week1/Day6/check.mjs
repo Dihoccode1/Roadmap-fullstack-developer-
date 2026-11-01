@@ -124,7 +124,8 @@ if (argument !== undefined && ![1, 2, 3, 4].includes(group)) {
   console.error('Chọn bài 1–4. Bỏ số để chạy cả bốn bài.');
   process.exitCode = 1;
 } else {
-  const selected = checks.filter(([id]) => argument === undefined || id === group);
+  // Người học yêu cầu bỏ bài 4; vẫn giữ nhóm để có thể mở lại khi chủ động chọn.
+  const selected = checks.filter(([id]) => argument === undefined ? id !== 4 : id === group);
   let passed = 0;
   for (const [id, title, run] of selected) {
     try {
@@ -137,5 +138,8 @@ if (argument !== undefined && ![1, 2, 3, 4].includes(group)) {
     }
   }
   console.log(`\nKết quả: ${passed}/${selected.length} tình huống đạt.`);
+  if (argument === undefined) {
+    console.log('SKIP [Bài 4]: 3 tình huống prototype/class bỏ qua theo yêu cầu người học.');
+  }
   if (passed !== selected.length) process.exitCode = 1;
 }
