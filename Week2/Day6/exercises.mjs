@@ -25,6 +25,7 @@
 // 100 phút bài 3; 50 phút bài 4; 30 phút chạy check và tự giải thích.
 // Chạy: node Week2/Day6/check.mjs 1 (đổi 1–4); bỏ số để chạy cả ngày.
 // Task factory chưa chạy cho đến khi được GỌI; khác Promise đã khởi động từ trước.
+// Review: bản nộp đạt 12/12; dọn TODO không chạy tới và biến currentIndex chưa dùng.
 
 // BÀI 1 — Ôn tuần tự bằng task factory.
 // runTasksSequential(tasks) -> Promise<array value>. tasks là array function không args,
@@ -32,7 +33,16 @@
 // Dùng for...of + await; giữ thứ tự; [] -> []; mỗi task gọi đúng một lần.
 // Một task lỗi thì reject chính Error và không gọi task phía sau; không sửa array tasks.
 export async function runTasksSequential(tasks) {
-  throw new Error('TODO: runTasksSequential');
+  const results = [];
+  for (const task of tasks) {
+    try {
+      const result = await task();
+      results.push(result);
+    } catch (error) {
+      throw error;
+    }
+  }
+  return results;
 }
 
 // BÀI 2 — Ôn khởi động đồng thời, không giới hạn số tác vụ.
@@ -42,7 +52,7 @@ export async function runTasksSequential(tasks) {
 // Kết quả theo thứ tự input dù hoàn thành ngược. Reject sớm cùng Error đầu tiên quan sát.
 // Không hủy hoặc đợi xong toàn bộ mới báo lỗi; task đã khởi động vẫn tiếp tục.
 export async function runTasksConcurrent(tasks) {
-  throw new Error('TODO: runTasksConcurrent');
+  return Promise.all(tasks.map((task) => task()));
 }
 
 // BÀI 3 — Worker pool, lấp slot trống thay vì đợi cả batch.
@@ -58,7 +68,35 @@ export async function runTasksConcurrent(tasks) {
 // Không dùng Promise.all(items.map(mapper)), không chia batch cố định, không thư viện.
 // Có thể Promise.all một số worker hữu hạn. Mỗi worker cần lấy index trước await.
 export async function mapWithConcurrency(items, limit, mapper) {
-  throw new Error('TODO: mapWithConcurrency');
+  if (!Number.isInteger(limit) || limit <= 0) {
+    throw new RangeError("limit must be a positive integer");
+  }
+
+  const results = new Array(items.length);
+  let nextIndex = 0;
+  let stopped = false;
+  const worker = async () => {
+    while (true) {
+      if (stopped) {
+        return;
+      }
+      if (nextIndex >= items.length) {
+        return;
+      }
+      const index = nextIndex++;
+      try {
+        const result = await mapper(items[index], index);
+        results[index] = result;
+      } catch (error) {
+        stopped = true;
+        throw error;
+      }
+    }
+  };
+  const countWorkers = Math.min(limit, items.length);
+  const workers = Array.from({ length: countWorkers }, () => worker());
+  await Promise.all(workers);
+  return results;
 }
 
 // BÀI 4 — Thu đủ kết quả tải sản phẩm với concurrency giới hạn.
@@ -71,5 +109,16 @@ export async function mapWithConcurrency(items, limit, mapper) {
 // Limit không hợp lệ phải reject RangeError như bài 3, không biến thành kết quả rejected.
 // [] + limit hợp lệ -> []; không sửa ids/product và không import hàm Ngày 12.
 export async function loadProductResultsLimited(ids, limit, fetchProduct) {
-  throw new Error('TODO: loadProductResultsLimited');
+  if (!Number.isInteger(limit) || limit <= 0) {
+    throw new RangeError("limit must be a positive integer");
+  }
+  const mapper = async (id) => {
+    try {
+      const product = await fetchProduct(id);
+      return { productId: id, status: "fulfilled", value: product };
+    } catch (error) {
+      return { productId: id, status: "rejected", reason: error.message };
+    }
+  };
+  return mapWithConcurrency(ids, limit, mapper);
 }
