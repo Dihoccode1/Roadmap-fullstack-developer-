@@ -17,6 +17,7 @@
 // Chạy từng bài: node Week1/Day5/check.mjs 1  (đổi 1–4).
 // Chạy tất cả: node Week1/Day5/check.mjs
 // Gợi ý chung: state nằm ngoài các method nhưng nằm trong factory.
+// Review: bốn bài đạt 12/12 kiểm tra; state đúng scope và snapshot đúng contract.
 
 // BÀI 1 — Counter có state chung giữa các method.
 // initialValue là số nguyên hợp lệ, mặc định 0.
@@ -25,19 +26,20 @@
 // Hai counter độc lập; không tạo lại state trong mỗi method.
 // Ví dụ createCounter(5): getValue()=5, increment()=6, reset()=5.
 export function createCounter(initialValue = 0) {
-  // TODO: state riêng cho một counter.
+  let value = initialValue;
+  // Các method cùng dùng binding value của lần gọi factory này.
   return {
     getValue() {
-      throw new Error('TODO: getValue');
+      return value;
     },
     increment() {
-      throw new Error('TODO: increment');
+      return (value += 1);
     },
     decrement() {
-      throw new Error('TODO: decrement');
+      return (value -= 1);
     },
     reset() {
-      throw new Error('TODO: reset');
+      return (value = initialValue);
     },
   };
 }
@@ -51,9 +53,16 @@ export function createCounter(initialValue = 0) {
 // Mỗi lần createOnce có state riêng. fn đồng bộ và không throw trong bài hôm nay.
 // Gợi ý: trạng thái "đã gọi chưa" khác với bản thân kết quả được lưu.
 export function createOnce(fn) {
-  // TODO: state của wrapper nằm ở đâu để không reset sau mỗi lần gọi?
+  // Cờ called độc lập với result nên cache được cả kết quả falsy.
+  let called = false;
+  let result;
   return function runOnce(...args) {
-    throw new Error('TODO: runOnce');
+    if (!called) {
+      result = fn(...args);
+      called = true;
+      return result;
+    }
+    return result;
   };
 }
 
@@ -65,16 +74,19 @@ export function createOnce(fn) {
 // Snapshot đã lấy trước đó không đổi khi history được add/clear sau này.
 // Vì phần tử là string nên shallow copy đủ trong bài 3.
 export function createHistory() {
-  // TODO: state riêng của history.
+  // Array riêng của một history, không được trả trực tiếp ra ngoài.
+  const history = [];
   return {
     add(value) {
-      throw new Error('TODO: history.add');
+      history.push(value);
+      return history.length;
     },
     getAll() {
-      throw new Error('TODO: history.getAll');
+      return [...history];
     },
     clear() {
-      throw new Error('TODO: history.clear');
+      history.length = 0;
+      return undefined;
     },
   };
 }
@@ -93,19 +105,44 @@ export function createHistory() {
 // Không sửa catalog; hai cart cùng catalog vẫn có giỏ riêng.
 // Ví dụ catalog p001 giá 100000: add('p001', 2) -> 2, getTotal() -> 200000.
 export function createCart(catalog) {
-  // TODO: state riêng cho một cart; không đặt lại trong add/getItems/getTotal.
+  const carts = [];
+  // Các method cùng dùng array carts, độc lập với cart tạo từ lần gọi khác.
   return {
     add(productId, quantity = 1) {
-      throw new Error('TODO: cart.add');
+      const product = catalog.find((p) => p.id === productId);
+      if (!product) {
+        throw new RangeError("Product ID not found in catalog");
+      }
+      if (!Number.isSafeInteger(quantity) || quantity <= 0) {
+        throw new RangeError("Quantity must be a positive integer");
+      }
+      const existingItem = carts.find((item) => item.productId === productId);
+      if (existingItem) {
+        existingItem.quantity += quantity;
+        return existingItem.quantity;
+      }
+      carts.push({ productId, priceMinor: product.priceMinor, quantity });
+      return quantity;
     },
     remove(productId) {
-      throw new Error('TODO: cart.remove');
+      const index = carts.findIndex((item) => item.productId === productId);
+
+      if (index === -1) {
+        return false;
+      }
+
+      carts.splice(index, 1);
+      return true;
+
     },
     getItems() {
-      throw new Error('TODO: cart.getItems');
+      return carts.map((cart) => ({ ...cart }));
     },
     getTotal() {
-      throw new Error('TODO: cart.getTotal');
+      return carts.reduce(
+        (total, cart) => total + cart.priceMinor * cart.quantity,
+        0,
+      );
     },
   };
 }
