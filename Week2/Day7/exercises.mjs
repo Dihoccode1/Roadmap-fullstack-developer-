@@ -26,6 +26,7 @@
 // 55 phút bài 3; 95 phút bài 4; 25 phút chạy check và tự giải thích.
 // Nếu có thêm 2 giờ theo lịch Chủ nhật, dùng để sửa bài Ngày 12 còn dở và tự kiểm chứng.
 // Chạy: node Week2/Day7/check.mjs 1 (đổi 1–4); bỏ số để chạy cả ngày.
+// Review: bản nộp đạt 12/12; dọn hai throw TODO không chạy tới, giữ nguyên logic.
 
 // BÀI 1 — Deadline có thể dọn, tách việc sở hữu timer khỏi Fetch.
 // createTimeoutSignal(ms, timers=globalThis) là hàm ĐỒNG BỘ -> { signal, dispose }.
@@ -37,7 +38,25 @@
 // Dispose trước deadline thì signal không bị abort; dispose sau abort giữ nguyên reason.
 // Không dùng AbortSignal.timeout/any; không dùng Promise.race ở bài hôm nay.
 export function createTimeoutSignal(ms, timers = globalThis) {
-  throw new Error('TODO: createTimeoutSignal');
+  if (!Number.isInteger(ms) || ms <= 0) {
+    throw new RangeError("ms must be a positive integer");
+  }
+  let controller = new AbortController();
+  let timeoutId = timers.setTimeout(() => {
+    const error = new Error(`Timeout after ${ms}ms`);
+    error.name = "TimeoutError";
+    controller.abort(error);
+  }, ms);
+
+  return {
+    signal: controller.signal,
+    dispose() {
+      if (timeoutId !== null) {
+        timers.clearTimeout(timeoutId);
+        timeoutId = null;
+      }
+    },
+  };
 }
 
 // BÀI 2 — Fetch một sản phẩm bằng signal từ caller.
@@ -50,7 +69,17 @@ export function createTimeoutSignal(ms, timers = globalThis) {
 // Network/parse/abort reject với chính Error gốc; giữ product reference, không sửa dữ liệu.
 // fetchImpl và json hỗ trợ abort khi đang pending. Không tự thêm listener ở helper này.
 export async function fetchProductWithSignal(id, signal, fetchImpl) {
-  throw new Error('TODO: fetchProductWithSignal');
+  const url = `/products/${encodeURIComponent(id)}`;
+  if (signal.aborted) {
+    throw signal.reason;
+  }
+
+  let response = await fetchImpl(url, { signal });
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+  let product = await response.json();
+  return product;
 }
 
 // BÀI 3 — Ghép timeout thật sự gửi abort với Fetch.
@@ -62,8 +91,21 @@ export async function fetchProductWithSignal(id, signal, fetchImpl) {
 // HTTP/mạng/parse -> giữ lỗi từ helper. Không bọc lỗi mới, không nuốt lỗi thành null.
 // Sai ms -> reject RangeError trước fetch. Mỗi lời gọi có signal/timer riêng.
 // Hợp đồng fetchImpl hỗ trợ abort; helper không ép dừng được dependency cố ý bỏ qua abort.
-export async function fetchProductWithTimeout(id, ms, fetchImpl, timers = globalThis) {
-  throw new Error('TODO: fetchProductWithTimeout');
+export async function fetchProductWithTimeout(
+  id,
+  ms,
+  fetchImpl,
+  timers = globalThis,
+) {
+  const { signal, dispose } = createTimeoutSignal(ms, timers);
+  try {
+    const product = await fetchProductWithSignal(id, signal, fetchImpl);
+    return product;
+  } catch (error) {
+    throw error;
+  } finally {
+    dispose();
+  }
 }
 
 // BÀI 4 — Loader trang sản phẩm, chỉ request hiện hành được ghi state.
@@ -81,13 +123,74 @@ export async function fetchProductWithTimeout(id, ms, fetchImpl, timers = global
 // Gợi ý tích hợp sau khi đạt: dependency có thể là hàm bọc helper Fetch ở bài 2.
 // Hôm nay không bắt buộc kết hợp signal supersede với signal timeout thành một signal.
 export function createProductPageLoader(fetchProduct) {
-  // TODO: state, controller và identity request trong closure.
+  // State dùng chung của loader
+  const state = {
+    status: "idle",
+    data: null,
+    error: null,
+  };
+
+  // Controller của request đang chạy
+  let currentController = null;
+
+  // ID của request mới nhất
+  let currentRequestId = 0;
+
   return {
     getState() {
-      throw new Error('TODO: pageLoader.getState');
+      return { ...state };
     },
+
     async load(id) {
-      throw new Error('TODO: pageLoader.load');
+      // 1. Nếu request cũ vẫn đang chạy → yêu cầu hủy nó
+      if (currentController !== null) {
+        currentController.abort(new DOMException("Superseded", "AbortError"));
+      }
+
+      // 2. Tạo controller RIÊNG cho request mới
+      const controller = new AbortController();
+      currentController = controller;
+
+      // 3. Tạo ID riêng cho request mới
+      const requestId = ++currentRequestId;
+
+      // 4. Reset state
+      state.status = "loading";
+      state.data = null;
+      state.error = null;
+
+      try {
+        // 5. Bắt đầu request
+        const product = await fetchProduct(id, {
+          signal: controller.signal,
+        });
+
+        // 6. Chỉ request mới nhất được sửa state
+        if (requestId === currentRequestId) {
+          state.status = "success";
+          state.data = product;
+          state.error = null;
+        }
+
+        // Dù request cũ hay mới,
+        // Promise của load vẫn trả kết quả của chính nó
+        return product;
+      } catch (error) {
+        // 7. Chỉ request mới nhất được ghi error
+        if (requestId === currentRequestId) {
+          state.status = "error";
+          state.data = null;
+          state.error = error;
+        }
+
+        // Giữ nguyên Error
+        throw error;
+      } finally {
+        // 8. Chỉ request mới nhất được cleanup controller
+        if (requestId === currentRequestId) {
+          currentController = null;
+        }
+      }
     },
   };
 }
