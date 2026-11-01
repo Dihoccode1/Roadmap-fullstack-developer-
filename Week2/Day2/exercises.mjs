@@ -18,6 +18,7 @@
 // Chạy từng bài: node Week2/Day2/check.mjs 1  (đổi 1–4).
 // Chạy cả ngày: node Week2/Day2/check.mjs
 // Bộ check điều khiển thời điểm hoàn tất của Promise, không so tốc độ máy.
+// Review: bốn bài đạt 12/12 kiểm tra và đúng yêu cầu chain/tuần tự/đồng thời.
 
 // BÀI 1 — Hai tác vụ có phụ thuộc, return Promise qua chain.
 // fetchProduct(productId) -> Promise<{ id, name, categoryId }>.
@@ -29,7 +30,17 @@
 // Lỗi ở bất kỳ bước nào phải reject với chính Error ban đầu.
 // Không hardcode categoryId và không đọc thuộc tính của Promise chưa hoàn tất.
 export function getProductWithCategory(productId, fetchProduct, fetchCategory) {
-  throw new Error('TODO: getProductWithCategory');
+  const productPromise = fetchProduct(productId);
+  return productPromise.then((product) => {
+    const categoryPromise = fetchCategory(product.categoryId);
+    return categoryPromise.then((category) => {
+      return {
+        productId: product.id,
+        name: product.name,
+        categoryName: category.name,
+      };
+    });
+  });
 }
 
 // BÀI 2 — Tuần tự: chỉ bắt đầu ID tiếp theo khi ID trước thành công.
@@ -38,7 +49,12 @@ export function getProductWithCategory(productId, fetchProduct, fetchCategory) {
 // Dùng async/await với for...of; không forEach(async...), Promise.all hay vòng chờ.
 // Ví dụ ['p1', 'p2']: fetch p1 xong mới fetch p2.
 export async function loadProductsSequential(ids, fetchProduct) {
-  throw new Error('TODO: loadProductsSequential');
+  const products = [];
+  for (const id of ids) {
+    const product = await fetchProduct(id);
+    products.push(product);
+  }
+  return products;
 }
 
 // BÀI 3 — Đồng thời: các request độc lập được khởi động trước khi đợi kết quả.
@@ -48,7 +64,8 @@ export async function loadProductsSequential(ids, fetchProduct) {
 // Các request khác đã khởi động không tự bị hủy khi Promise.all reject.
 // Không await từng fetch trong vòng lặp rồi mới đưa các kết quả vào Promise.all.
 export async function loadProductsConcurrent(ids, fetchProduct) {
-  throw new Error('TODO: loadProductsConcurrent');
+  const productPromises = ids.map((id) => fetchProduct(id));
+  return Promise.all(productPromises);
 }
 
 // BÀI 4 — Thu đủ kết quả kể cả lỗi, không fail-fast.
@@ -59,5 +76,19 @@ export async function loadProductsConcurrent(ids, fetchProduct) {
 // [] -> []; nếu tất cả request lỗi vẫn fulfill array ghi nhận từng lỗi.
 // Không bỏ kết quả lỗi và không gắn kết quả với ID theo thứ tự hoàn thành.
 export async function loadProductResults(ids, fetchProduct) {
-  throw new Error('TODO: loadProductResults');
+  const products = await Promise.allSettled(ids.map((id) => fetchProduct(id)));
+  return products.map((result, index) => {
+    if (result.status === "fulfilled") {
+      return {
+        productId: ids[index],
+        status: "fulfilled",
+        value: result.value,
+      };
+    }
+    return {
+      productId: ids[index],
+      status: "rejected",
+      reason: result.reason.message,
+    };
+  });
 }
