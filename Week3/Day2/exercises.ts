@@ -26,19 +26,20 @@
 // Chạy cả hai lớp; type predicate đúng chữ ký không chứng minh logic guard đúng.
 // Gợi ý 5 giờ: 70 phút docs/video; 35 phút bài 1; 65 phút bài 2;
 // 35 phút bài 3; 65 phút bài 4; 30 phút typecheck, runtime và tự giải thích.
+// Review: bản nộp đạt strict và 12/12 runtime; dọn TODO còn sót, giữ cách giải.
 
-import type { Product } from '../Day1/exercises.ts';
-export type { Product } from '../Day1/exercises.ts';
+import type { Product } from "../Day1/exercises.ts";
+export type { Product } from "../Day1/exercises.ts";
 
 export type ProductState =
-  | { readonly status: 'idle' }
-  | { readonly status: 'loading' }
-  | { readonly status: 'success'; readonly data: Product }
-  | { readonly status: 'error'; readonly error: Error };
+  | { readonly status: "idle" }
+  | { readonly status: "loading" }
+  | { readonly status: "success"; readonly data: Product }
+  | { readonly status: "error"; readonly error: Error };
 
 // Helper hoàn chỉnh dùng cho kiểm tra exhaustive ở bài 4, không cần sửa.
 function assertNever(value: never): never {
-  throw new Error('Unexpected state');
+  throw new Error("Unexpected state");
 }
 
 // BÀI 1 — Union tham số và narrowing bằng typeof.
@@ -47,7 +48,17 @@ function assertNever(value: never): never {
 // Giữ chuỗi '001' là '001', không ép chuỗi sang số. Không sửa input.
 // Ví dụ 0 -> '0'; ' p1 ' -> 'p1'; '   ' -> lỗi.
 export function normalizeProductId(id: string | number): string {
-  throw new Error('TODO: normalizeProductId');
+  if (typeof id === "number") {
+    return String(id);
+  }
+  if (typeof id === "string") {
+    const trimmedId = id.trim();
+    if (trimmedId.length === 0) {
+      throw new Error("Invalid product id");
+    }
+    return trimmedId;
+  }
+  throw new Error("Invalid product id");
 }
 
 // BÀI 2 — Runtime type guard cho unknown.
@@ -59,7 +70,23 @@ export function normalizeProductId(id: string | number): string {
 // Với primitive, null, function, array hoặc thiếu/sai trường: trả false, không throw.
 // Thu hẹp object rồi dùng in/typeof để đọc an toàn; không dùng ép kiểu as Product.
 export function isProduct(value: unknown): value is Product {
-  throw new Error('TODO: isProduct');
+  if (typeof value === "object" && value !== null && !Array.isArray(value)) {
+    const hasId =
+      "id" in value &&
+      typeof value.id === "string" &&
+      value.id.trim().length > 0;
+    const hasName =
+      "name" in value &&
+      typeof value.name === "string" &&
+      value.name.trim().length > 0;
+    const hasPriceInCents =
+      "priceInCents" in value &&
+      typeof value.priceInCents === "number" &&
+      Number.isInteger(value.priceInCents) &&
+      value.priceInCents >= 0;
+    return hasId && hasName && hasPriceInCents;
+  }
+  return false;
 }
 
 // BÀI 3 — Đưa validation vào ranh giới nhận dữ liệu.
@@ -67,7 +94,10 @@ export function isProduct(value: unknown): value is Product {
 // Không hợp lệ -> throw new Error('Invalid product'). Không return null/undefined.
 // Input unknown vẫn có thể truyền bất kỳ thứ gì; compiler không thay runtime validation.
 export function parseProduct(value: unknown): Product {
-  throw new Error('TODO: parseProduct');
+  if (isProduct(value)) {
+    return value;
+  }
+  throw new Error("Invalid product");
 }
 
 // BÀI 4 — Discriminated union và exhaustive checking.
@@ -78,5 +108,21 @@ export function parseProduct(value: unknown): Product {
 // Nhánh default dùng return assertNever(state), để compiler báo lỗi nếu thêm variant mà quên case.
 // Không đổi ProductState thành một object có mọi field optional. Không sửa state/Product/Error.
 export function getProductStateMessage(state: ProductState): string {
-  throw new Error('TODO: getProductStateMessage');
+  switch (state.status) {
+    case "idle":
+      return "Chưa tải";
+
+    case "loading":
+      return "Đang tải";
+
+    case "success":
+      return `Sản phẩm: ${state.data.name}`;
+
+    case "error":
+      return `Lỗi: ${state.error.message}`;
+
+    default:
+      return assertNever(state);
+  }
+
 }
