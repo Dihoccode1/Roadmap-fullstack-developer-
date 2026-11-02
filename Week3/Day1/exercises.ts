@@ -33,6 +33,7 @@
 // Node type stripping không áp dụng tsconfig như compiler, không phải bước build production.
 // Gợi ý 5 giờ: 80 phút docs/video và thử lệnh; 35 phút bài 1; 50 phút bài 2;
 // 45 phút bài 3; 60 phút bài 4; 30 phút typecheck, runtime check và tự giải thích.
+// Review: bản nộp đạt strict typecheck và 12/12 runtime; dọn bốn throw TODO sau return.
 
 // Các hợp đồng dữ liệu cung cấp sẵn để bạn tập trung khai báo kiểu và logic hàm.
 export interface Product {
@@ -61,8 +62,11 @@ export interface CartSummary {
 // Thêm kiểu cho unitPriceInCents:number, quantity:number và return:number.
 // Trả đơn giá * số lượng. Input là số nguyên không âm; giữ kết quả 0.
 // Dùng number, không Number hoặc ép chuỗi. Ví dụ 1250, 3 -> 3750.
-export function calculateLineTotal(unitPriceInCents, quantity) {
-  throw new Error('TODO: calculateLineTotal');
+export function calculateLineTotal(
+  unitPriceInCents: number,
+  quantity: number,
+): number {
+  return unitPriceInCents * quantity;
 }
 
 // BÀI 2 — Interface Product và cập nhật bất biến.
@@ -71,8 +75,12 @@ export function calculateLineTotal(unitPriceInCents, quantity) {
 // làm tròn Math.round(product.priceInCents * (1 - percent / 100)).
 // Không sửa product. Ví dụ 105 cents giảm 10% -> 95 cents.
 // Giảm 0% vẫn trả object mới; giá 0 hoặc giảm 100% vẫn giữ số 0.
-export function applyDiscount(product, percent) {
-  throw new Error('TODO: applyDiscount');
+export function applyDiscount(product: Product, percent: number): Product {
+  return {
+    id: product.id,
+    name: product.name,
+    priceInCents: Math.round(product.priceInCents * (1 - percent / 100)),
+  };
 }
 
 // BÀI 3 — Optional property và strictNullChecks.
@@ -80,8 +88,11 @@ export function applyDiscount(product, percent) {
 // Nếu displayName có giá trị sau trim thì trả chuỗi đã trim; thiếu/rỗng/toàn khoảng trắng
 // thì trả username nguyên bản. Không sửa profile, không dùng non-null assertion (!).
 // Ví dụ { username:'linh', displayName:'  Linh  ' } -> 'Linh'; thiếu displayName -> 'linh'.
-export function getDisplayName(profile) {
-  throw new Error('TODO: getDisplayName');
+export function getDisplayName(profile: UserProfile): string {
+  if (profile.displayName && profile.displayName.trim() !== "") {
+    return profile.displayName.trim();
+  }
+  return profile.username;
 }
 
 // BÀI 4 — readonly array và ghép hàm đã typed.
@@ -90,6 +101,14 @@ export function getDisplayName(profile) {
 // Tái sử dụng calculateLineTotal. Input quantity nguyên không âm; ID lặp là dòng riêng.
 // [] -> cả ba trường bằng 0. Không sửa array/items/product; không clone nếu không cần.
 // readonly không tự đóng băng object lúc chạy; checker dùng input đã freeze để kiểm tra bất biến.
-export function summarizeCart(items) {
-  throw new Error('TODO: summarizeCart');
+export function summarizeCart(items: readonly CartItem[]): CartSummary {
+  return {
+    lineCount: items.length,
+    totalQuantity: items.reduce((sum, item) => sum + item.quantity, 0),
+    totalInCents: items.reduce(
+      (sum, item) =>
+        sum + calculateLineTotal(item.product.priceInCents, item.quantity),
+      0,
+    ),
+  };
 }
