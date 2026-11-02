@@ -11,7 +11,9 @@
     "typecheck:day1": "tsc --noEmit -p Day1/tsconfig.json",
     "check:day1": "node Day1/check.mjs",
     "typecheck:day2": "tsc --noEmit -p Day2/tsconfig.json",
-    "check:day2": "node Day2/check.mjs"
+    "check:day2": "node Day2/check.mjs",
+    "typecheck:day3": "tsc --noEmit -p Day3/tsconfig.json",
+    "check:day3": "node Day3/check.mjs"
   },
   "devDependencies": {
     "typescript": "7.0.2"
